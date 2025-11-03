@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+venv/
+ENV/
+
+# Spotify credentials
+config.py
+
+# VSCode
+.vscode/
+
+# Misc
+.DS_Store
