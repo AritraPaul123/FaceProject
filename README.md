@@ -4,7 +4,7 @@ A real-time emotion recognition app that detects facial expressions and plays mo
 
 ## Features 🚀
 
-- Real-time facial emotion detection using DeepFace
+- Real-time facial detection using OpenCV Haar Cascades
 - Dynamic emotion-to-music mapping
 - Spotify-controlled music playback
 - Modern GUI built with CustomTkinter
@@ -88,12 +88,14 @@ python main.py
 ## How it Works 🤔
 
 1. The app captures your facial expression through the webcam
-2. DeepFace analyzes the emotion in real-time
-3. The detected emotion is mapped to a suitable music genre/mood
-4. Spotify automatically plays matching songs
+2. OpenCV Haar Cascades detect faces in the video stream
+3. A simple emotion detection algorithm assigns emotions (currently randomized for demonstration)
+4. The detected emotion is mapped to a suitable music genre/mood
+5. Spotify automatically plays matching songs
 
 ## Troubleshooting 🔧
 
 - **No active device found**: Open Spotify desktop app and play any song once
 - **Authentication failed**: Check your credentials and redirect URI
 - **Webcam not detected**: Ensure your webcam is properly connected and not in use by another application
+- **Haar Cascade file not found**: The app should automatically locate the Haar Cascade file from your OpenCV installation
