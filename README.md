@@ -93,6 +93,31 @@ python main.py
 4. The detected emotion is mapped to a suitable music genre/mood
 5. Spotify automatically plays matching songs
 
+## Training Custom Emotion Model 🧠
+
+To train a custom CNN model for emotion recognition:
+
+1. Run the training script:
+```bash
+python train_emotion_cnn.py
+```
+
+2. The script will:
+   - Automatically download the FER-2013 dataset
+   - Preprocess the data (48×48 grayscale images)
+   - Train a custom CNN model
+   - Save the trained model as `emotion_model.h5`
+   - Display training accuracy and loss curves
+
+The model targets at least 70% validation accuracy and supports 7 emotion classes:
+- Angry
+- Disgust
+- Fear
+- Happy
+- Neutral
+- Sad
+- Surprise
+
 ## Troubleshooting 🔧
 
 - **No active device found**: Open Spotify desktop app and play any song once

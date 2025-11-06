@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-# Remove deepface import
 import customtkinter as ctk
 from PIL import Image, ImageTk
 from typing import Optional
@@ -8,6 +7,18 @@ import threading
 import time
 import os
 from spotify_auth import SpotifyAuthManager
+
+# Try to import our custom emotion inference module
+global CUSTOM_MODEL_AVAILABLE
+CUSTOM_MODEL_AVAILABLE = False
+try:
+    from emotion_inference import EmotionRecognizer
+    CUSTOM_MODEL_AVAILABLE = True
+    print("Custom emotion inference module loaded successfully.")
+except ImportError:
+    print("Emotion inference module not available. Using simple emotion detection.")
+except Exception as e:
+    print(f"Error loading emotion inference module: {e}. Using simple emotion detection.")
 
 class EmotionMusicPlayer(ctk.CTk):
     def __init__(self):
@@ -26,6 +37,17 @@ class EmotionMusicPlayer(ctk.CTk):
         self.last_emotion_change = time.time()
         self.emotion_cooldown = 10  # Seconds between emotion changes
         self.running = True
+        self.custom_model_available = CUSTOM_MODEL_AVAILABLE  # Store in instance variable
+        
+        # Initialize emotion recognizer if available
+        self.emotion_recognizer = None
+        if self.custom_model_available and os.path.exists('emotion_model.h5'):
+            try:
+                self.emotion_recognizer = EmotionRecognizer('emotion_model.h5')
+                print("Custom emotion recognizer initialized successfully.")
+            except Exception as e:
+                print(f"Failed to initialize emotion recognizer: {e}")
+                self.custom_model_available = False
         
         # Get the path to the Haar cascade file
         self.face_cascade_path = os.path.join(os.path.dirname(cv2.__file__), 'data', 'haarcascade_frontalface_default.xml')
@@ -80,8 +102,11 @@ class EmotionMusicPlayer(ctk.CTk):
         while self.running:
             ret, frame = self.camera.read()
             if ret:
-                # Simple emotion detection based on facial features
-                emotion = self.detect_simple_emotion(frame)
+                # Detect emotion using either custom model or simple method
+                if self.custom_model_available and self.emotion_recognizer is not None:
+                    emotion = self.detect_emotion_custom(frame)
+                else:
+                    emotion = self.detect_simple_emotion(frame)
                 
                 # Update emotion if changed and cooldown passed
                 current_time = time.time()
@@ -106,6 +131,40 @@ class EmotionMusicPlayer(ctk.CTk):
                 self.camera_label.configure(image=img_tk)
                 # Store reference to avoid garbage collection using setattr
                 setattr(self.camera_label, '_image', img_tk)
+    
+    def detect_emotion_custom(self, frame):
+        """Detect emotion using custom trained CNN model"""
+        try:
+            # Convert to grayscale
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            
+            # Load Haar cascade for face detection
+            face_cascade = cv2.CascadeClassifier(self.face_cascade_path)
+            
+            # Detect faces
+            faces = face_cascade.detectMultiScale(
+                gray,
+                scaleFactor=1.1,
+                minNeighbors=5,
+                minSize=(30, 30)
+            )
+            
+            if len(faces) > 0:
+                # Process the first detected face
+                (x, y, w, h) = faces[0]
+                face_roi = gray[y:y+h, x:x+w]
+                
+                # Use our emotion recognizer to predict emotion
+                if self.emotion_recognizer is not None:
+                    emotion, confidence = self.emotion_recognizer.predict_emotion(face_roi)
+                    if emotion is not None:
+                        # Convert to lowercase to match expected format
+                        return emotion.lower()
+            
+            return 'neutral'
+        except Exception as e:
+            print(f"Error in custom emotion detection: {e}")
+            return 'neutral'
     
     def detect_simple_emotion(self, frame):
         """Simple emotion detection based on facial features"""
